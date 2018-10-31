@@ -1,0 +1,23 @@
+#!/bin/bash
+
+TOKENBB=dRyyWz7j4D8172DPiLyF
+URLBB=https://gitex.labbs.com.br
+URLCEF=gitlab.example.com
+LOCATION=`for i in $(curl --header "Private-Token: dRyyWz7j4D8172DPiLyF" https://gitex.labbs.com.br/api/v4/projects?per_page=150 --insecure | jq '.[] | .path_with_namespace' --raw-output) ; do curl -s $URLBB/$i/container_registry.json?private_token=$TOKENBB --insecure | jq '.[] | .location' --raw-output ; done`
+
+
+docker login -u cef_ci_user -p $TOKENBB https://registry-gitex.labbs.com.br
+
+
+for a in $LOCATION
+do
+        #echo docker pull $a -a
+        TAGS_LOCAL=`docker images $a | awk 'NR>1 {print $2}'`
+        IMAGES=`curl --header "Private-Token: dRyyWz7j4D8172DPiLyF" https://gitex.labbs.com.br/api/v4/projects?per_page=150 --insecure | jq '.[] | .path_with_namespace' --raw-output  | grep sfd`
+        echo docker tag $a:$TAGS_LOCAL $URLCEF/$IMAGES
+
+done
+docker logout https://registry.gitlab.example.com
+
+
+TAGS_LOCAL=`docker images registry-gitex.labbs.com.br/sfd-br/sfd-peer | awk 'NR>1 {print $2}'`
